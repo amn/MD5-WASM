@@ -81,8 +81,7 @@ void MD5_update_last(void * data, int n_bits, struct MD5_context * p_context) {
 	*P &= ~(0xff >> x);
 	*P |= 0x80 >> x;
 	int z = (512 - (n_bits + 1 + 64) % 512), Z = z / 8;
-	memset(P + 1, 0, Z);
-	memset(P + 1 + Z, 0, 8);
+	memset(P + 1, 0, Z + 8);
 	uint64_t n_message_bits = p_context->n_bits + n_bits;
 	for(int i = 0; i < sizeof(n_message_bits); i++)
 		P[1 + Z + i] = (n_message_bits >> (i * 8)) & 0xff;
