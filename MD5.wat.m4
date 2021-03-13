@@ -27,17 +27,17 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 	(func (export "update") (param $start i32) (param $n_bytes i32) (param $context i32)
 		(local $end i32)
 		(local $A i32) (local $B i32) (local $C i32) (local $D i32)
-		(local $AA i32) (local $BB i32) (local $CC i32) (local $DD i32)
 		(local.set $A (i32.load offset=0 (local.get $context)))
 		(local.set $B (i32.load offset=4 (local.get $context)))
 		(local.set $C (i32.load offset=8 (local.get $context)))
 		(local.set $D (i32.load offset=12 (local.get $context)))
 		(local.set $end (i32.add (local.get $start) (local.get $n_bytes)))
 		(loop $process_block
-			(local.set $AA (local.get $A))
-			(local.tee $BB (local.get $B))
-			(local.set $CC (local.get $C))
-			(local.set $DD (local.get $D))
+			local.get $C
+			local.get $D
+			local.get $A
+			local.get $B
+			local.get $B
 			R(A, B, C, D, 0, 0xd76aa478, 7, `F')
 			R(D, A, B, C, 1, 0xe8c7b756, 12, `F')
 			R(C, D, A, B, 2, 0x242070db, 17, `F')
@@ -105,10 +105,10 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 			R(D, A, B, C, 11, 0xbd3af235, 10, `I')
 			R(C, D, A, B, 2, 0x2ad7d2bb, 15, `I')
 			R(B, C, D, A, 9, 0xeb86d391, 21, `I')
-			(local.set $A (i32.add (local.get $A) (local.get $AA)))
-			(local.set $B (i32.add (local.get $BB)))
-			(local.set $C (i32.add (local.get $C) (local.get $CC)))
-			(local.set $D (i32.add (local.get $D) (local.get $DD)))
+			(local.set $B (i32.add))
+			(local.set $A (i32.add (local.get $A)))
+			(local.set $D (i32.add (local.get $D)))
+			(local.set $C (i32.add (local.get $C)))
 			(local.set $start (i32.add (local.get $start) (i32.const 64)))
 			(br_if 0 (i32.ne (local.get $start) (local.get $end))))
 		(i32.store offset=0 (local.get $context) (local.get $A))
