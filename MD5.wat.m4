@@ -7,7 +7,7 @@ define(`R', `dnl
 								(i32.add
 									(local.get $$1)
 									$8($2,$3,$4))
-								(i32.load offset=eval($5 * 4) align=2 (local.get $start)))
+								(local.get eval(8 + $5)))
 							(i32.const $6))
 						(i32.const $7))))dnl
 ')dnl
@@ -27,6 +27,7 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 	(func (export "update") (param $start i32) (param $n_bytes i32) (param $context i32)
 		(local $end i32)
 		(local $A i32) (local $B i32) (local $C i32) (local $D i32)
+		(local i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32)
 		(local.set $A (i32.load offset=0 (local.get $context)))
 		(local.set $B (i32.load offset=4 (local.get $context)))
 		(local.set $C (i32.load offset=8 (local.get $context)))
@@ -38,6 +39,22 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 			local.get $A
 			local.get $B
 			local.get $B
+			(local.set 8 (i32.load offset=0 align=2 (local.get $start)))
+			(local.set 9 (i32.load offset=4 align=2 (local.get $start)))
+			(local.set 10 (i32.load offset=8 align=2 (local.get $start)))
+			(local.set 11 (i32.load offset=12 align=2 (local.get $start)))
+			(local.set 12 (i32.load offset=16 align=2 (local.get $start)))
+			(local.set 13 (i32.load offset=20 align=2 (local.get $start)))
+			(local.set 14 (i32.load offset=24 align=2 (local.get $start)))
+			(local.set 15 (i32.load offset=28 align=2 (local.get $start)))
+			(local.set 16 (i32.load offset=32 align=2 (local.get $start)))
+			(local.set 17 (i32.load offset=36 align=2 (local.get $start)))
+			(local.set 18 (i32.load offset=40 align=2 (local.get $start)))
+			(local.set 19 (i32.load offset=44 align=2 (local.get $start)))
+			(local.set 20 (i32.load offset=48 align=2 (local.get $start)))
+			(local.set 21 (i32.load offset=52 align=2 (local.get $start)))
+			(local.set 22 (i32.load offset=56 align=2 (local.get $start)))
+			(local.set 23 (i32.load offset=60 align=2 (local.get $start)))
 			R(A, B, C, D, 0, 0xd76aa478, 7, `F')
 			R(D, A, B, C, 1, 0xe8c7b756, 12, `F')
 			R(C, D, A, B, 2, 0x242070db, 17, `F')
