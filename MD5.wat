@@ -108,13 +108,15 @@
 		(local.tee $end (i32.add (local.get $end) (i32.const 1)))
 		(local.set $end_padding
 			(i32.add
-				(i32.sub
-					(i32.const 64)
-					(i32.and
-						(i32.add
-							(local.get $n_bytes)
-							(i32.const 9))
-						(i32.const 63)))))
+				(i32.and
+					(i32.sub
+						(i32.const 64)
+						(i32.and
+							(i32.add
+								(local.get $n_bytes)
+								(i32.const 9))
+							(i32.const 63)))
+					(i32.const 63))))
 		(loop $pad_with_zero
 			(if (i32.ne (local.get $end) (local.get $end_padding)) (then
 				(i32.store (local.get $end) (i32.const 0))
