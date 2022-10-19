@@ -6,4 +6,4 @@ $(DESTDIR)MD5.wasm: $(DESTDIR)%.wasm: $(SRCDIR)%.wat | $(DESTDIR)
 	wat2wasm $< -o $@
 
 $(DESTDIR):
-	mkdir $@
+	mkdir -p $@
