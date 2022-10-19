@@ -9,6 +9,6 @@ $(DESTDIR)MD5.wat: $(DESTDIR)%.wat: $(SRCDIR)%.wat.m4 | $(DESTDIR)
 	m4 $< > $@
 
 $(DESTDIR):
-	mkdir $@
+	mkdir -p $@
 
 .INTERMEDIATE: $(DESTDIR)MD5.wat
