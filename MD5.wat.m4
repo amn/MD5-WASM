@@ -18,6 +18,16 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 (module
 	(memory (export "memory") 1)
 	(func (export "start") (param $context i32) (result i32)
+		(;
+			Initialize an [MD5] computation context.
+
+			You MUST call this procedure exactly once before a series of related `update` calls for progressively digesting a body of data (e.g. a file), otherwise the behaviour of `update` and thus the ultimate [MD5] signature stored in the computation context, are undefined. If you're familiar with Python's built-in `hashlib` module analog for digesting data, you can think of calling `start` as equivalent to constructing a hash object (for calling the `update` method on, among other things) with `hashlib.new` or `hashlib.md5`, both of which essentially return an object that encapsulates a digest computation context.
+
+			A computation context is used for computing an MD5 signature iteratively for an arbitrarily large body of data, through a series of calls to the `update` procedure, piecemeal (chunk by chunk, if you will). This means that one single WASM instance may safely be used for computing signatures in parallel, for distinct unrelated bodies of data -- each body using its own computation context. The computation context is encoded as a tightly-packed structure consisting of initial ("seed") values for variables A, B, C, and D that comprise the 128-bit MD5 signature (updated with every call to `update`), and the number of bytes (octets) so-far digested as part of the computation context.
+
+			@param context The pointer to (offset in [default] memory) where this procedure initializes with contents of the computation context structure
+			@result The number of octets that the context structure spans (i.e. its size); this is for portability so that clients don't have to generally assume a magic size number
+		;)
 		(i32.store offset=0 (local.get $context) (i32.const 0x67452301))
 		(i32.store offset=4 (local.get $context) (i32.const 0xefcdab89))
 		(i32.store offset=8 (local.get $context) (i32.const 0x98badcfe))
@@ -25,6 +35,15 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 		(i64.store offset=16 (local.get $context) (i64.const 0))
 		(i32.const 24))
 	(func (export "update") (param $start i32) (param $n_bytes i32) (param $context i32)
+		(;
+			Update the signature stored in a computation context (see `start`) from a given block of data.
+
+			This procedure implements iterative / "streaming" digesting of a body of data (conventionally a "file") for a single piece of the latter. Calling this procedure on subsequent (necessarily adjacent) pieces of the body of data, once per piece or chunk as these are called, updates the signature stored in the computation context structure. As per the MD5 algorithm, after the final `update` call -- one for the last chunk of the body of data -- the [MD5] signature will have been available in the computation context structure, as-is (all 128 bits of it). See also `pad` which patches (pads) the last chunk and returns amended chunk length, all per the MD5 algorithm.
+
+			@param start The pointer to (offset in [default] memory) where the block of data starts
+			@param n_bytes Number of bytes (octets) that comprise the block of data; the value MUST be a multiple of 64 [bytes], otherwise the behaviour of the procedure is undefined
+			@param context The pointer to (offset in [default] memory) the computation context structure (see `start`)
+		;)
 		(local $end i32)
 		(local $A i32) (local $B i32) (local $C i32) (local $D i32)
 		(local.set $A (i32.load offset=0 (local.get $context)))
@@ -117,6 +136,20 @@ define(`I', `(i32.xor (local.get $$2) (i32.or (local.get $$1) (i32.xor (local.ge
 		(i32.store offset=12 (local.get $context) (local.get $D))
 		(i64.store offset=16 (local.get $context) (i64.add (i64.load offset=16 (local.get $context)) (i64.extend_i32_u (local.get $n_bytes)))))
 	(func (export "pad") (param $start i32) (param $n_bytes i32) (param $context i32) (result i32)
+		(;
+			Patch a "final" chunk of a given body of data being digested.
+
+			MUST be called exactly once for a body of data, specifically for the "final" chunk _and_ returning the size of the resulting padded chunk, `update` MUST be called with the resulting size too, regardless of whether there is actually any number of bytes comprising the final chunk or not. So for the final chunk that is zero bytes (necessarily because the body of data to be digested was in fact of a size that was multiple of 64) you'd still call this procedure as `pad(start, 0, context)`, as part of e.g. `update(start, pad(start, 0, context), context)`. For a final chunk whose size isn't 0, substitute 0 with the chunk size -- the requirement still applies.
+
+			As per the MD5 algorithm, the "end" portion of data _as fed_ to the MD5 "digesting" machine (`update` in this implementation), must also be of size that is a multiple of 64 bytes, which is what this procedure essentially helps ensure with padding mandated explicitly by the algorithm.
+
+			Keep in mind that although the procedure is perhaps "innocuously" called `pad`, it does _patch_ the range of memory at the end of the chunk (as passed) to comply with the MD5 algorithm. As such the procedure could have been called `patch` but then the rather clear "padding" part of the algorithm wouldn't have been expressed as well, hence the former name at the cost of the somewhat hidden "patching" portion of it.
+
+			@param start See the corresponding parameter for `update`; in this context this is correspondingly offset of / pointer to the final chunk
+			@param n_bytes See the corresponding parameter for `update`; in this context, the value is the "original" size of the final chunk -- obvously, since it is this procedure that "pads" the chunk and returns the padded size
+			@param context See the corresponding parameter to `start` and `update`
+			@result The padded chunk size fit for passing to one final call to `update` after which the MD5 signature is available in the context structure
+		;)
 		(local $end i32)
 		(local $end_padding i32)
 		(local.set $end (i32.add (local.get $start) (local.get $n_bytes)))
